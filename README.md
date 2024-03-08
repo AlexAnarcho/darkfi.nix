@@ -29,14 +29,14 @@ or exceptionnaly via command-line as an argument of an installation command.
 nix-env -i github:darkrenaissance/darki?dir=contrib/nix --no-sandbox
 ```
 
-## Usage
+### Declaration
 
 Import it in your flake inputs.
 
 ```sh
 inputs = {
     nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
-    darkfi.url = "github:darkrenaissance/darki?dir=contrib/nix";
+    darkfi.url = "github:pipelight/darkfi.nix";
 };
 ```
 
@@ -46,4 +46,21 @@ Add the packages to your environment or to a specific users.
 environment.systemPackages = with pkgs; [
     inputs.darkfi.packages.${system}.default
 ];
+```
+
+## Enable background services
+
+Add a user systemd unit with home-manager.
+
+```nix
+# home.nix
+## Darkirc messaging background service
+systemd.user.services."darkirc" = {
+  enable = true;
+  after = ["network.target"];
+  serviceConfig = {
+    ExecStart = "${darkfi}/bin/darkirc";
+  };
+  wantedBy = ["multi-user.target"];
+};
 ```
