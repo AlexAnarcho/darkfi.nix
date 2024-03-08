@@ -59,7 +59,7 @@ in
 
     installPhase = ''
       mkdir -p $out/bin
-      find . -type f -executable ! -name "*.*" -exec cp {} $out/bin
+      find . -type f -executable ! -name "*.*" -exec cp {} $out/bin \;
     '';
 
     ## Manage toolchain with Rustup instead of nix-store
