@@ -4,40 +4,22 @@
   ...
 }:
 with pkgs; let
-  ## Get binaries to be build from Cargo.toml
-  # Read Cargo.toml
-  cargo_file = builtins.fromTOML (builtins.readFile ../../Cargo.toml);
-  # Retrieve name of binaries
-  binaries =
-    lib.lists.subtractLists [
-      "drk"
-      "genev-cli"
-      "swapd"
-    ] (
-      builtins.map (
-        member:
-          builtins.baseNameOf member
-      )
-      (builtins.filter (member:
-        lib.strings.hasPrefix "bin/" member)
-      cargo_file.workspace.members)
-    )
-    ++ [
-      "genev"
-    ];
+  source = pkgs.fetchFromGitHub {
+    owner = "darkrenaissance";
+    repo = "darkfi";
+    rev = "master";
+    # rev = "ref/tag/v0.4.1";
+    hash = "sha256-z1YdEG+E7i2N65u7NljrgQjpLMfDcvU9xGplCQK/vU0=";
+  };
 in
   stdenv.mkDerivation rec {
     # Declare nix derivation as intentionnaly impure
     # for compatibility with nixos configuration flag  `nix.settings.sandbox=relaxed`
     __noChroot = true;
 
-    pname = "darkfi";
-    version = cargo_file.package.version;
-    src = fetchFromGitHub {
-      owner = "darkrenaissance";
-      repo = "darkfi";
-      rev = "ref/tag/v0.4.1";
-    };
+    name = "darkfi";
+    version = source.rev;
+    src = source;
 
     # Skip cmake reconfigure
     dontUseCmakeConfigure = true;
@@ -52,6 +34,8 @@ in
       rustup toolchain install nightly
       rustup target add wasm32-unknown-unknown
       rustup target add wasm32-unknown-unknown --toolchain nightly
+      rustup default nightly
+      cargo check
       make
     '';
 
@@ -70,17 +54,18 @@ in
       openssl
       cacert
       wabt
+      jq
     ];
 
     installPhase = ''
       mkdir -p $out/bin
-      cp ${builtins.concatStringsSep " " binaries} $out/bin
-
+      find . -type f -executable ! -name "*.*" -exec cp {} $out/bin
     '';
 
     ## Manage toolchain with Rustup instead of nix-store
     ## https://nixos.wiki/wiki/Rust
-    RUSTC_VERSION = pkgs.lib.readFile ../../rust-toolchain.toml;
+    RUSTC_VERSION = "nightly";
+    # RUSTC_VERSION = builtins.readFile source + "./rust-toolchain.toml";
     LIBCLANG_PATH = pkgs.lib.makeLibraryPath [pkgs.llvmPackages_latest.libclang.lib];
     shellHook = ''
       export PATH=$PATH:''${CARGO_HOME:-~/.cargo}/bin
