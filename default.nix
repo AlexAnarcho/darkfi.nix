@@ -7,8 +7,9 @@ with pkgs; let
   source = pkgs.fetchFromGitHub {
     owner = "darkrenaissance";
     repo = "darkfi";
+    # rev = "v0.4.1";
+    # hash = "sha256-NmrFtx5S7+JpPwkRPIQsR6rCJ7u8xrKWOHZk7J1wbfs=";
     rev = "master";
-    # rev = "ref/tag/v0.4.1";
     hash = "sha256-z1YdEG+E7i2N65u7NljrgQjpLMfDcvU9xGplCQK/vU0=";
   };
 in
@@ -31,12 +32,17 @@ in
       export HOME=$(mktemp -d)
       export RUSTUP_USE_CURL=1
       export CARGO_NET_GIT_FETCH_WITH_CLI=true
-      rustup toolchain install nightly
-      rustup target add wasm32-unknown-unknown
-      rustup target add wasm32-unknown-unknown --toolchain nightly
-      rustup default nightly
+      rustup toolchain install stable
+      # rustup toolchain install nightly
+      rustup target add wasm32-unknown-unknown --toolchain stable
+      # rustup target add wasm32-unknown-unknown --toolchain nightly
+      rustup default stable
+      # rustup default nightly
       cargo check
       make
+    '';
+
+    fixupPhase = ''
     '';
 
     nativeBuildInputs = with pkgs; [
@@ -55,6 +61,8 @@ in
       cacert
       wabt
       jq
+      # v0.4.1
+      # libmpg123
     ];
 
     installPhase = ''
@@ -64,8 +72,8 @@ in
 
     ## Manage toolchain with Rustup instead of nix-store
     ## https://nixos.wiki/wiki/Rust
+    # RUSTC_VERSION = "stable";
     RUSTC_VERSION = "nightly";
-    # RUSTC_VERSION = builtins.readFile source + "./rust-toolchain.toml";
     LIBCLANG_PATH = pkgs.lib.makeLibraryPath [pkgs.llvmPackages_latest.libclang.lib];
     shellHook = ''
       export PATH=$PATH:''${CARGO_HOME:-~/.cargo}/bin
