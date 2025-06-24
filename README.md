@@ -10,6 +10,16 @@ lead to duplicate and unevitably to an out of date flake.
 
 Make this flake pure
 
+
+### Building the flake
+To build the flake on the terminal with the project as the current working directory
+
+```sh
+nix build .#packages.x86_64-linux.default
+```
+
+💡 Need to have the sandbox thing from below set in the system configuration
+
 ### Prerequisites
 
 The flake buildPhases need network access that are by default disabled by nix.
